@@ -1,0 +1,17 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# Maven #
+target
+
+# IntelliJ #
+*.iml
+.idea
+atlassian-ide-plugin.xml
+
+# Vaadin gwt-unitCache #
+src/main/webapp/VAADIN/gwt-unitCache
