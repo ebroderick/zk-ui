@@ -1,51 +1,129 @@
 package zk_ui.component;
 
 import com.vaadin.data.Item;
-import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.ui.AbstractSelect;
-import com.vaadin.ui.Tree;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.event.Action;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.vaadin.dialogs.ConfirmDialog;
+import zk_ui.zookeeper.ZkClient;
+import zk_ui.zookeeper.ZkNode;
 
-public class ZkTreeLayout extends VerticalLayout {
-    private static final String CAPTION_PROPERTY_ID = "name";
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
-    public ZkTreeLayout() {
-        Tree tree = new Tree();
-        tree.setContainerDataSource(getMockContainer());
-        tree.setItemCaptionPropertyId(CAPTION_PROPERTY_ID);
+public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
+    private static Logger logger = LoggerFactory.getLogger(ZkTreeLayout.class);
+    protected static final String ITEM_CAPTION_PROPERTY = "nodeName";
+    private static final Action ADD_ACTION = new Action("Add Node");
+    private static final Action DELETE_ACTION = new Action("Delete Node");
+
+    private ZkClient zkClient;
+    private Tree tree;
+
+    public ZkTreeLayout(ZkClient zkClient) {
+        this.zkClient = zkClient;
+        tree = new Tree();
+
+        tree.addContainerProperty(ITEM_CAPTION_PROPERTY, String.class, null);
+        tree.setItemCaptionPropertyId(ITEM_CAPTION_PROPERTY);
         tree.setItemCaptionMode(AbstractSelect.ItemCaptionMode.PROPERTY);
+        tree.setImmediate(true);
+
+        try {
+            List<ZkNode> rootNodes = zkClient.getRoots();
+            for (ZkNode rootNode : rootNodes) {
+                Item root = tree.addItem(rootNode);
+                root.getItemProperty(ITEM_CAPTION_PROPERTY).setValue(rootNode.getNodeName());
+
+                if (rootNode.hasChildren()) {
+                    tree.setChildrenAllowed(rootNode, true);
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+
         addComponent(tree);
+        setMargin(new MarginInfo(true, false, false, true));
+
+        tree.addActionHandler(this);
+        tree.addExpandListener(new ZkExpandListener());
+        tree.addCollapseListener(new ZkCollapseListener());
     }
 
-    private  HierarchicalContainer getMockContainer() {
-        Item item = null;
-        int itemId = 0; // Increasing numbering for itemId:s
+    @Override
+    public Action[] getActions(Object target, Object sender) {
+        if (target != null && target instanceof ZkNode && ((ZkNode) target).isRoot()) {
+            return new Action[]{ADD_ACTION};
+        } else {
+            return new Action[]{ADD_ACTION, DELETE_ACTION};
+        }
+    }
 
-        String[][] hardware = {
-                { "Desktops", "Dell OptiPlex GX240", "Dell OptiPlex GX260", "Dell OptiPlex GX280" },
-                { "Monitors", "Benq T190HD", "Benq T220HD", "Benq T240HD" },
-                { "Laptops", "IBM ThinkPad T40", "IBM ThinkPad T43", "IBM ThinkPad T60" }
-        };
+    @Override
+    public void handleAction(Action action, Object sender, final Object target) {
+        logger.debug("handling action: " + action.toString());
 
-        HierarchicalContainer hwContainer = new HierarchicalContainer();
-        hwContainer.addContainerProperty(CAPTION_PROPERTY_ID, String.class, null);
-        for (int i = 0; i < hardware.length; i++) {
-            // Add new item
-            item = hwContainer.addItem(itemId);
-            // Add name property for item
-            item.getItemProperty(CAPTION_PROPERTY_ID).setValue(hardware[i][0]);
-            // Allow children
-            hwContainer.setChildrenAllowed(itemId, true);
-            itemId++;
-            for (int j = 1; j < hardware[i].length; j++) {
-                // Add child items
-                item = hwContainer.addItem(itemId);
-                item.getItemProperty(CAPTION_PROPERTY_ID).setValue(hardware[i][j]);
-                hwContainer.setParent(itemId, itemId - j);
-                hwContainer.setChildrenAllowed(itemId, false);
-                itemId++;
+        if (action == ADD_ACTION) {
+            UI.getCurrent().addWindow(new ZkAddNodeWindow(tree, zkClient, (ZkNode) target));
+
+        } else if (action == DELETE_ACTION) {
+            ConfirmDialog.show(UI.getCurrent(), "Please Confirm: ", "Are you sure you want to delete " +
+                ((ZkNode) target).getFullPath() + "?", "Yes", "No",
+                new ConfirmDialog.Listener() {
+                    @Override
+                    public void onClose(ConfirmDialog dialog) {
+                        if (dialog.isConfirmed()) {
+                            zkClient.deleteNode((ZkNode) target);
+                            removeNodeChildren(tree, ((ZkNode) target));
+                            tree.removeItem(target);
+                        }
+                    }
+                });
+        }
+    }
+
+    protected static void removeNodeChildren(Tree tree, ZkNode zkNode) {
+        Collection<?> children = tree.getChildren(zkNode);
+        List<ZkNode> zkNodeChildren = new ArrayList<ZkNode>();
+
+        if (children != null) {
+            for (Iterator<?> i = children.iterator(); i.hasNext();) {
+                zkNodeChildren.add((ZkNode) i.next());
+            }
+            for (ZkNode child : zkNodeChildren) {
+                removeNodeChildren(tree, child);
+                tree.collapseItem(child);
+                tree.removeItem(child);
             }
         }
-        return hwContainer;
+    }
+
+    private class ZkExpandListener implements Tree.ExpandListener {
+        @Override
+        public void nodeExpand(Tree.ExpandEvent expandEvent) {
+            ZkNode node = (ZkNode) expandEvent.getItemId();
+            if (node.hasChildren()) {
+                List<ZkNode> children = zkClient.getChildren(node);
+                for (ZkNode child : children) {
+                    Item item = tree.addItem(child);
+                    item.getItemProperty(ITEM_CAPTION_PROPERTY).setValue(child.getNodeName());
+
+                    tree.setParent(child, node);
+                    tree.setChildrenAllowed(child, child.hasChildren());
+                }
+            }
+        }
+    }
+
+    private class ZkCollapseListener implements Tree.CollapseListener {
+        @Override
+        public void nodeCollapse(Tree.CollapseEvent collapseEvent) {
+            removeNodeChildren(tree, (ZkNode) collapseEvent.getItemId());
+        }
     }
 }
