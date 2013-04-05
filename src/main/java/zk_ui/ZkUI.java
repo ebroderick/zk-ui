@@ -38,8 +38,12 @@ public class ZkUI extends UI {
 
         HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
         splitPanel.setSplitPosition(300, Unit.PIXELS);
-        splitPanel.setFirstComponent(new ZkTreeLayout(getZkClient()));
-        splitPanel.setSecondComponent(new ZkNodeDetailLayout());
+
+        ZkNodeDetailLayout nodeDetailLayout = new ZkNodeDetailLayout(getZkClient());
+        ZkTreeLayout zkTreeLayout = new ZkTreeLayout(getZkClient(), nodeDetailLayout);
+
+        splitPanel.setFirstComponent(zkTreeLayout);
+        splitPanel.setSecondComponent(nodeDetailLayout);
 
         content.addComponent(splitPanel);
         content.setExpandRatio(splitPanel , 1.0f);

@@ -24,7 +24,7 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
     private ZkClient zkClient;
     private Tree tree;
 
-    public ZkTreeLayout(ZkClient zkClient) {
+    public ZkTreeLayout(ZkClient zkClient, ZkNodeDetailLayout nodeDetailLayout) {
         this.zkClient = zkClient;
         tree = new Tree();
 
@@ -53,6 +53,7 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
         tree.addActionHandler(this);
         tree.addExpandListener(new ZkExpandListener());
         tree.addCollapseListener(new ZkCollapseListener());
+        tree.addItemClickListener(nodeDetailLayout);
     }
 
     @Override
