@@ -1,6 +1,7 @@
 package zk_ui.component;
 
 import com.vaadin.data.Item;
+import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.Action;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.*;
@@ -46,6 +47,9 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+
+        ((HierarchicalContainer) tree.getContainerDataSource()).sort(
+                new Object[] {ZkTreeLayout.ITEM_CAPTION_PROPERTY}, new boolean[]{true});
 
         addComponent(tree);
         setMargin(new MarginInfo(true, false, false, true));
@@ -116,6 +120,9 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
 
                     tree.setParent(child, node);
                     tree.setChildrenAllowed(child, child.hasChildren());
+
+                    ((HierarchicalContainer) tree.getContainerDataSource()).sort(
+                            new Object[] {ZkTreeLayout.ITEM_CAPTION_PROPERTY}, new boolean[]{true});
                 }
             }
         }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Config>
+    <ZkServerList>
+        <ZkServer>
+            <Name>localhost</Name>
+            <HostName>localhost</HostName>
+            <Port>2181</Port>
+        </ZkServer>
+    </ZkServerList>
+</Config>

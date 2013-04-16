@@ -2,9 +2,16 @@ package zk_ui.zookeeper;
 
 import java.io.Serializable;
 
+import zk_ui.config.ZkServer;
+
 public class ZkHost implements Serializable {
     private String name;
     private String hostAndPort;
+
+    public ZkHost(ZkServer server) {
+        this.name = server.getName();
+        this.hostAndPort = server.getHostName() + ":" + server.getPort();
+    }
 
     public ZkHost(String name, String hostAndPort) {
         this.name = name;

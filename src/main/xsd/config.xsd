@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+    attributeFormDefault="unqualified" version="1.0">
+
+    <xsd:element name="Config">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                holds zk-ui configuration details
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="ZkServerList" type="ZkServerList"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="ZkServerList">
+        <xsd:sequence>
+            <xsd:element name="ZkServer" type="ZkServer" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="ZkServer">
+        <xsd:sequence>
+            <xsd:element name="Name" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        displayable name of the zookeeper server
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="HostName" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        host name for zookeeper server
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="Port" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        port for zookeeper server
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>

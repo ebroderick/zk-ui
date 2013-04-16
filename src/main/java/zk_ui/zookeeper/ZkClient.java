@@ -54,7 +54,10 @@ public class ZkClient implements Watcher {
     private String getValue(String path, ZkHost zkHost, Stat stat) {
         String value = null;
         try {
-            value = new String(zookeepers.get(zkHost).getData(path, false, stat));
+            byte[] byteValue = zookeepers.get(zkHost).getData(path, false, stat);
+            if (byteValue != null) {
+                value = new String(byteValue);
+            }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -65,7 +68,7 @@ public class ZkClient implements Watcher {
         String value = null;
         try {
             zookeepers.get(zkNode.getZkHost()).setData(zkNode.getFullPath(),
-                    newValue.getBytes("UTF-8"), zkNode.getVersion() + 1);
+                    newValue.getBytes("UTF-8"), -1);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
