@@ -20,17 +20,17 @@ import java.util.Arrays;
 
 @SuppressWarnings("serial")
 public class ZkUI extends UI {
-    private static final int ZK_PORT = 31235;
+    //private static final int ZK_PORT = 31235;
     private static Logger logger = LoggerFactory.getLogger(ZkUI.class);
-    private NIOServerCnxn.Factory serverCnxnFactory;
+    //private NIOServerCnxn.Factory serverCnxnFactory;
 
     @Override
     protected void init(VaadinRequest request) {
-        try {
+        /*try {
             startEmbeddedZooKeeper();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-        }
+        }*/
 
         VerticalLayout content = new VerticalLayout();
         content.setSizeFull();
@@ -52,22 +52,22 @@ public class ZkUI extends UI {
     }
 
     private ZkClient getZkClient() {
-        ZkHost zkHost = new ZkHost("localhost", "localhost:" + ZK_PORT);
+        ZkHost zkHost = new ZkHost("localhost", "localhost:2181");
         return new ZkClient(Arrays.asList(new ZkHost[]{zkHost}));
     }
 
-    private void startEmbeddedZooKeeper() throws Exception {
+    /*private void startEmbeddedZooKeeper() throws Exception {
         String dataDirectory = System.getProperty("java.io.tmpdir");
         File dir = new File(dataDirectory, "zookeeper").getAbsoluteFile();
 
         ZooKeeperServer zkServer = new ZooKeeperServer(dir, dir, 2000);
         serverCnxnFactory = new NIOServerCnxn.Factory(new InetSocketAddress(ZK_PORT), 10);
         serverCnxnFactory.startup(zkServer);
-    }
+    }*/
 
-    @Override
+    /*@Override
     public void close() {
         super.close();
         serverCnxnFactory.shutdown();
-    }
+    }*/
 }

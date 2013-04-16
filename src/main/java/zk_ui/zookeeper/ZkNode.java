@@ -1,5 +1,7 @@
 package zk_ui.zookeeper;
 
+import java.util.Date;
+
 public class ZkNode {
     private ZkHost zkHost;
     private String nodeName;
@@ -7,14 +9,20 @@ public class ZkNode {
     private boolean root;
     private String value;
     private int numberOfChildren;
+    private Date createTimestamp;
+    private Date modifiedTimestamp;
+    private int version;
 
-    ZkNode(ZkHost zkHost, String nodeName, String fullPath, boolean root, String value, int numberOfChildren) {
+    ZkNode(ZkHost zkHost, String nodeName, String fullPath, boolean root, String value, int numberOfChildren,
+           Date createTimestamp, Date modifiedTimestamp, int version) {
         this.zkHost = zkHost;
         this.nodeName = nodeName;
         this.fullPath = fullPath;
         this.root = root;
         this.value = value;
         this.numberOfChildren = numberOfChildren;
+        this.createTimestamp = createTimestamp;
+        this.modifiedTimestamp = modifiedTimestamp;
     }
 
     public ZkHost getZkHost() {
@@ -43,6 +51,18 @@ public class ZkNode {
 
     public boolean hasChildren() {
         return numberOfChildren > 0;
+    }
+
+    public Date getCreateTimestamp() {
+        return createTimestamp;
+    }
+
+    public Date getModifiedTimestamp() {
+        return modifiedTimestamp;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     @Override

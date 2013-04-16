@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,8 @@ public class ZkClient implements Watcher {
         List<ZkNode> roots = new ArrayList<ZkNode>();
         for (ZkHost zkHost : zookeepers.keySet()) {
             Stat stat = getStat("/", zkHost);
-            ZkNode rootNode = new ZkNode(zkHost, zkHost.getName(), "/", true, null, stat.getNumChildren());
+            ZkNode rootNode = new ZkNode(zkHost, zkHost.getName(), "/", true, null, stat.getNumChildren(),
+                    new Date(stat.getCtime()), new Date(stat.getMtime()), stat.getVersion());
 
             logger.debug("adding root node: " + rootNode);
 
@@ -59,6 +61,17 @@ public class ZkClient implements Watcher {
         return value;
     }
 
+    public String updateValue(ZkNode zkNode, String newValue) {
+        String value = null;
+        try {
+            zookeepers.get(zkNode.getZkHost()).setData(zkNode.getFullPath(),
+                    newValue.getBytes("UTF-8"), zkNode.getVersion() + 1);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        return value;
+    }
+
     private String getFullPath(ZkNode parent, String nodeName) {
         if (parent.isRoot()) {
             return parent.getFullPath() + nodeName;
@@ -77,7 +90,7 @@ public class ZkClient implements Watcher {
             logger.error(e.getMessage(), e);
         }
 
-        return new ZkNode(parentNode.getZkHost(), nodeName, fullPath, false, nodeValue, 0);
+        return createZKNode(parentNode, nodeName);
     }
 
     public void deleteNode(ZkNode node) {
@@ -103,11 +116,7 @@ public class ZkClient implements Watcher {
             try {
                 List<String> paths = zk.getChildren(zkNode.getFullPath(), false);
                 for (String path : paths) {
-                    String fullPath = getFullPath(zkNode, path);
-                    Stat stat = getStat(fullPath, zkNode.getZkHost());
-                    String value = getValue(fullPath, zkNode.getZkHost(), stat);
-                    children.add(new ZkNode(zkNode.getZkHost(), path, fullPath, false, value,
-                            stat.getNumChildren()));
+                    children.add(createZKNode(zkNode, path));
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -115,6 +124,19 @@ public class ZkClient implements Watcher {
         }
 
         return children;
+    }
+
+    private ZkNode createZKNode(ZkNode parent, String nodeName) {
+        String fullPath = getFullPath(parent, nodeName);
+        Stat stat = getStat(fullPath, parent.getZkHost());
+        String value = getValue(fullPath, parent.getZkHost(), stat);
+        int numOfChildren = stat.getNumChildren();
+        long createTime = stat.getCtime();
+        long modifiedTime = stat.getMtime();
+        int version = stat.getVersion();
+
+        return new ZkNode(parent.getZkHost(), nodeName, fullPath, false, value, numOfChildren, new Date(createTime),
+                new Date(modifiedTime), version);
     }
 
     @Override

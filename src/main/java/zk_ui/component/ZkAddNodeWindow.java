@@ -12,6 +12,7 @@ public class ZkAddNodeWindow extends Window {
     private static Logger logger = LoggerFactory.getLogger(ZkAddNodeWindow.class);
 
     public ZkAddNodeWindow(final Tree tree, final ZkClient zkClient, final ZkNode parentNode) {
+        setCaption("Add a new znode...");
         setWidth(500, Unit.PIXELS);
         setHeight(350, Unit.PIXELS);
         center();
