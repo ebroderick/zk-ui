@@ -2,6 +2,8 @@ package zk_ui.zookeeper;
 
 import java.util.Date;
 
+import org.apache.zookeeper.data.Stat;
+
 public class ZkNode {
     private ZkHost zkHost;
     private String nodeName;
@@ -63,6 +65,13 @@ public class ZkNode {
 
     public int getVersion() {
         return version;
+    }
+
+    public void refresh(ZkClient zkClient) {
+        Stat stat = zkClient.getStat(fullPath, zkHost);
+        modifiedTimestamp = new Date(stat.getMtime());
+        version = stat.getVersion();
+        value = zkClient.getValue(fullPath, zkHost, stat);
     }
 
     @Override

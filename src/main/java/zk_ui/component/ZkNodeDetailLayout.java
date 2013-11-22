@@ -9,6 +9,9 @@ import com.vaadin.data.Container;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.LayoutEvents;
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.ShortcutListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.DefaultFieldFactory;
@@ -76,12 +79,16 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
      */
     @Override
     public void itemClick(ItemClickEvent itemClickEvent) {
-        logger.info("ItemClickEvent! (" + itemClickEvent.getItemId().getClass().getName() + ")");
+        logger.debug("ItemClickEvent! (" + itemClickEvent.getItemId().getClass().getName() + ")");
         Object itemId = itemClickEvent.getItemId();
         if (itemId instanceof ZkNode) {
             ZkNode zkNode = (ZkNode) itemId;
             table.setContainerDataSource(getContainer(zkNode));
         }
+    }
+
+    public void showChildren(ZkNode zkNode) {
+        table.setContainerDataSource(getContainerForChildren(zkNode));
     }
 
     private IndexedContainer getContainer() {
@@ -90,6 +97,10 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
 
     private IndexedContainer getContainer(ZkNode zkNode) {
         return getContainer(Arrays.asList(new ZkNode[]{zkNode}));
+    }
+
+    private IndexedContainer getContainerForChildren(ZkNode zkNode) {
+        return getContainer(zkClient.getChildren(zkNode));
     }
 
     private IndexedContainer getContainer(List<ZkNode> zkNodes) {
@@ -105,7 +116,7 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
             Item item = container.addItem(zkNode.getFullPath());
             item.getItemProperty(CONTAINER_PROPERTY_NAME).setValue(zkNode.getNodeName());
             item.getItemProperty(CONTAINER_PROPERTY_VALUE).setValue(
-                    new ZkNodeValueEditLayout(zkNode.getFullPath(), zkNode.getValue(), !zkNode.hasChildren()));
+                    new ZkNodeValueEditLayout(zkNode));
             item.getItemProperty(CONTAINER_PROPERTY_CREATE_TIMESTAMP).setValue(zkNode.getCreateTimestamp());
             item.getItemProperty(CONTAINER_PROPERTY_MODIFIED_TIMESTAMP).setValue(zkNode.getModifiedTimestamp());
             item.getItemProperty(CONTAINER_PROPERTY_VERSION).setValue(zkNode.getVersion());
@@ -129,54 +140,31 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
     }
 
     private class ZkNodeValueEditLayout extends VerticalLayout {
-        private ZkNodeValueEditLayout(final String path, final String nodeValue, boolean editable) {
-            if (editable) {
-                final TextField textField = new TextField(nodeValue);
-                final Button editButton = new Button("Edit");
-                final Button saveButton = new Button("Save");
-                final Button cancelButton = new Button("Cancel");
-
-                textField.setSizeFull();
+        private ZkNodeValueEditLayout(final ZkNode zkNode) {
+            if (!zkNode.hasChildren()) {
+                final TextField textField = new TextField();
+                textField.setValue(zkNode.getValue());
                 textField.setReadOnly(true);
 
-                editButton.setVisible(true);
-                saveButton.setVisible(false);
-                cancelButton.setVisible(false);
-
-                editButton.addClickListener(new Button.ClickListener() {
+                textField.addShortcutListener(new ShortcutListener("EnterKey", ShortcutAction.KeyCode.ENTER, null) {
                     @Override
-                    public void buttonClick(Button.ClickEvent clickEvent) {
-                        textField.setReadOnly(false);
-                        editButton.setVisible(false);
-                        saveButton.setVisible(true);
-                        cancelButton.setVisible(true);
-                    }
-                });
-
-                saveButton.addClickListener(new Button.ClickListener() {
-                    @Override
-                    public void buttonClick(Button.ClickEvent clickEvent) {
-                        textField.setReadOnly(true);
-                        editButton.setVisible(true);
-                        saveButton.setVisible(false);
-                        cancelButton.setVisible(false);
-                    }
-                });
-
-                cancelButton.addClickListener(new Button.ClickListener() {
-                    @Override
-                    public void buttonClick(Button.ClickEvent clickEvent) {
-                        textField.setReadOnly(true);
-                        editButton.setVisible(true);
-                        saveButton.setVisible(false);
-                        cancelButton.setVisible(false);
+                    public void handleAction(Object sender, Object target) {
+                        String value = ((TextField) target).getValue();
+                        zkClient.updateValue(zkNode, value);
+                        zkNode.refresh(zkClient);
+                        ((TextField) target).setReadOnly(true);
                     }
                 });
 
                 addComponent(textField);
-                addComponent(editButton);
-                addComponent(saveButton);
-                addComponent(cancelButton);
+                addLayoutClickListener(new LayoutEvents.LayoutClickListener() {
+                    @Override
+                    public void layoutClick(LayoutEvents.LayoutClickEvent layoutClickEvent) {
+                        if (layoutClickEvent.isDoubleClick() && layoutClickEvent.getChildComponent() == textField) {
+                            textField.setReadOnly(!textField.isReadOnly());
+                        }
+                    }
+                });
             }
         }
     }

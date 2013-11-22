@@ -41,7 +41,7 @@ public class ZkClient implements Watcher {
         return roots;
     }
 
-    private Stat getStat(String path, ZkHost zkHost) {
+    protected Stat getStat(String path, ZkHost zkHost) {
         Stat stat = null;
         try {
             stat = zookeepers.get(zkHost).exists(path, false);
@@ -51,7 +51,7 @@ public class ZkClient implements Watcher {
         return stat;
     }
 
-    private String getValue(String path, ZkHost zkHost, Stat stat) {
+    protected String getValue(String path, ZkHost zkHost, Stat stat) {
         String value = null;
         try {
             byte[] byteValue = zookeepers.get(zkHost).getData(path, false, stat);
@@ -64,15 +64,13 @@ public class ZkClient implements Watcher {
         return value;
     }
 
-    public String updateValue(ZkNode zkNode, String newValue) {
-        String value = null;
+    public void updateValue(ZkNode zkNode, String newValue) {
         try {
             zookeepers.get(zkNode.getZkHost()).setData(zkNode.getFullPath(),
                     newValue.getBytes("UTF-8"), -1);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
-        return value;
     }
 
     private String getFullPath(ZkNode parent, String nodeName) {

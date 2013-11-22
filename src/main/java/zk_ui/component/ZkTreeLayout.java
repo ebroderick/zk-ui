@@ -21,12 +21,15 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
     protected static final String ITEM_CAPTION_PROPERTY = "nodeName";
     private static final Action ADD_ACTION = new Action("Add Node");
     private static final Action DELETE_ACTION = new Action("Delete Node");
+    private static final Action SHOW_CHILDREN_ACTION = new Action("Show All Children");
 
     private ZkClient zkClient;
     private Tree tree;
+    private ZkNodeDetailLayout nodeDetailLayout;
 
     public ZkTreeLayout(ZkClient zkClient, ZkNodeDetailLayout nodeDetailLayout) {
         this.zkClient = zkClient;
+        this.nodeDetailLayout = nodeDetailLayout;
         tree = new Tree();
 
         tree.addContainerProperty(ITEM_CAPTION_PROPERTY, String.class, null);
@@ -62,11 +65,21 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
 
     @Override
     public Action[] getActions(Object target, Object sender) {
-        if (target != null && target instanceof ZkNode && ((ZkNode) target).isRoot()) {
-            return new Action[]{ADD_ACTION};
-        } else {
-            return new Action[]{ADD_ACTION, DELETE_ACTION};
+        ZkNode zkNode = (ZkNode) target;
+        ArrayList<Action> actions = new ArrayList<Action>();
+
+        if (zkNode != null) {
+            actions.add(ADD_ACTION);
+
+            if (!zkNode.isRoot()) {
+                actions.add(DELETE_ACTION);
+            }
+
+            if (zkNode.hasChildren()) {
+                actions.add(SHOW_CHILDREN_ACTION);
+            }
         }
+        return actions.toArray(new Action[actions.size()]);
     }
 
     @Override
@@ -89,6 +102,9 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
                         }
                     }
                 });
+
+        } else if (action == SHOW_CHILDREN_ACTION) {
+            nodeDetailLayout.showChildren((ZkNode) target);
         }
     }
 
