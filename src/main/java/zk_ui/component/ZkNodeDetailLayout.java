@@ -15,6 +15,7 @@ import com.vaadin.ui.DefaultFieldFactory;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Layout;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
@@ -94,7 +95,7 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
     private IndexedContainer getContainer(List<ZkNode> zkNodes) {
         IndexedContainer container = new IndexedContainer();
         container.addContainerProperty(CONTAINER_PROPERTY_NAME, String.class, null);
-        container.addContainerProperty(CONTAINER_PROPERTY_VALUE, HorizontalLayout.class, null);
+        container.addContainerProperty(CONTAINER_PROPERTY_VALUE, Layout.class, null);
         container.addContainerProperty(CONTAINER_PROPERTY_CREATE_TIMESTAMP, Date.class, null);
         container.addContainerProperty(CONTAINER_PROPERTY_MODIFIED_TIMESTAMP, Date.class, null);
         container.addContainerProperty(CONTAINER_PROPERTY_VERSION, Integer.class, null);
@@ -127,7 +128,7 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
         }
     }
 
-    private class ZkNodeValueEditLayout extends HorizontalLayout {
+    private class ZkNodeValueEditLayout extends VerticalLayout {
         private ZkNodeValueEditLayout(final String path, final String nodeValue, boolean editable) {
             if (editable) {
                 final TextField textField = new TextField(nodeValue);
@@ -136,7 +137,6 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
                 final Button cancelButton = new Button("Cancel");
 
                 textField.setSizeFull();
-                textField.setVisible(true);
                 textField.setReadOnly(true);
 
                 editButton.setVisible(true);
