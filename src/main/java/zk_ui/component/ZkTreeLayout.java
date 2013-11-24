@@ -3,6 +3,9 @@ package zk_ui.component;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.Action;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.Resource;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.*;
 import org.slf4j.Logger;
@@ -19,6 +22,9 @@ import java.util.List;
 public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
     private static Logger logger = LoggerFactory.getLogger(ZkTreeLayout.class);
     protected static final String ITEM_CAPTION_PROPERTY = "nodeName";
+    private static final String ITEM_ICON_PROPERTY = "icon";
+    private static final Resource FOLDER_ICON = new ThemeResource("../runo/icons/16/folder.png");
+    private static final Resource DOCUMENT_ICON = new ThemeResource("../runo/icons/16/document.png");
     private static final Action ADD_ACTION = new Action("Add Node");
     private static final Action DELETE_ACTION = new Action("Delete Node");
     private static final Action SHOW_CHILDREN_ACTION = new Action("Show All Children");
@@ -33,6 +39,9 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
         tree = new Tree();
 
         tree.addContainerProperty(ITEM_CAPTION_PROPERTY, String.class, null);
+        tree.addContainerProperty(ITEM_ICON_PROPERTY, Resource.class, null);
+
+        tree.setItemIconPropertyId(ITEM_ICON_PROPERTY);
         tree.setItemCaptionPropertyId(ITEM_CAPTION_PROPERTY);
         tree.setItemCaptionMode(AbstractSelect.ItemCaptionMode.PROPERTY);
         tree.setImmediate(true);
@@ -42,6 +51,7 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
             for (ZkNode rootNode : rootNodes) {
                 Item root = tree.addItem(rootNode);
                 root.getItemProperty(ITEM_CAPTION_PROPERTY).setValue(rootNode.getNodeName());
+                root.getItemProperty(ITEM_ICON_PROPERTY).setValue(FOLDER_ICON);
 
                 if (rootNode.hasChildren()) {
                     tree.setChildrenAllowed(rootNode, true);
@@ -135,7 +145,14 @@ public class ZkTreeLayout extends VerticalLayout implements Action.Handler {
                     item.getItemProperty(ITEM_CAPTION_PROPERTY).setValue(child.getNodeName());
 
                     tree.setParent(child, node);
-                    tree.setChildrenAllowed(child, child.hasChildren());
+
+                    if (child.hasChildren()) {
+                        tree.setChildrenAllowed(child, true);
+                        item.getItemProperty(ITEM_ICON_PROPERTY).setValue(FOLDER_ICON);
+                    } else {
+                        tree.setChildrenAllowed(child, false);
+                        item.getItemProperty(ITEM_ICON_PROPERTY).setValue(DOCUMENT_ICON);
+                    }
 
                     ((HierarchicalContainer) tree.getContainerDataSource()).sort(
                             new Object[] {ZkTreeLayout.ITEM_CAPTION_PROPERTY}, new boolean[]{true});

@@ -22,6 +22,7 @@ public class ZkNode {
         this.fullPath = fullPath;
         this.root = root;
         this.value = value;
+        this.version = version;
         this.numberOfChildren = numberOfChildren;
         this.createTimestamp = createTimestamp;
         this.modifiedTimestamp = modifiedTimestamp;

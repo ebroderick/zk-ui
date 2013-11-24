@@ -48,7 +48,7 @@ public class ZkAddNodeWindow extends Window {
             @Override
             public void buttonClick(Button.ClickEvent clickEvent) {
                 String name = nodeName.getValue();
-                String value = nodeName.getValue();
+                String value = nodeValue.getValue();
 
                 logger.info("adding new node: " + name + ", " + value + " to path " + parentNode.getFullPath());
 

@@ -116,7 +116,7 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
             Item item = container.addItem(zkNode.getFullPath());
             item.getItemProperty(CONTAINER_PROPERTY_NAME).setValue(zkNode.getNodeName());
             item.getItemProperty(CONTAINER_PROPERTY_VALUE).setValue(
-                    new ZkNodeValueEditLayout(zkNode));
+                    new ZkNodeValueEditLayout(zkNode, container));
             item.getItemProperty(CONTAINER_PROPERTY_CREATE_TIMESTAMP).setValue(zkNode.getCreateTimestamp());
             item.getItemProperty(CONTAINER_PROPERTY_MODIFIED_TIMESTAMP).setValue(zkNode.getModifiedTimestamp());
             item.getItemProperty(CONTAINER_PROPERTY_VERSION).setValue(zkNode.getVersion());
@@ -140,9 +140,10 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
     }
 
     private class ZkNodeValueEditLayout extends VerticalLayout {
-        private ZkNodeValueEditLayout(final ZkNode zkNode) {
+        private ZkNodeValueEditLayout(final ZkNode zkNode, final Container container) {
             if (!zkNode.hasChildren()) {
                 final TextField textField = new TextField();
+                textField.setSizeFull();
                 textField.setValue(zkNode.getValue());
                 textField.setReadOnly(true);
 
@@ -153,6 +154,14 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
                         zkClient.updateValue(zkNode, value);
                         zkNode.refresh(zkClient);
                         ((TextField) target).setReadOnly(true);
+
+                        container.getItem(zkNode.getFullPath())
+                                .getItemProperty(CONTAINER_PROPERTY_MODIFIED_TIMESTAMP)
+                                .setValue(zkNode.getModifiedTimestamp());
+
+                        container.getItem(zkNode.getFullPath())
+                                .getItemProperty(CONTAINER_PROPERTY_VERSION)
+                                .setValue(zkNode.getVersion());
                     }
                 });
 
