@@ -27,15 +27,26 @@ public class ZkClient implements Watcher {
         }
     }
 
+    public void addZkHost(ZkHost zkHost) {
+        try {
+            zookeepers.put(zkHost, new ZooKeeper(zkHost.getHostAndPort(), 10000, this));
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    public ZkNode getRoot(ZkHost zkHost) {
+        Stat stat = getStat("/", zkHost);
+        ZkNode rootNode = new ZkNode(zkHost, zkHost.getName(), "/", true, null, stat.getNumChildren(),
+                new Date(stat.getCtime()), new Date(stat.getMtime()), stat.getVersion());
+        return rootNode;
+    }
+
     public List<ZkNode> getRoots() {
         List<ZkNode> roots = new ArrayList<ZkNode>();
         for (ZkHost zkHost : zookeepers.keySet()) {
-            Stat stat = getStat("/", zkHost);
-            ZkNode rootNode = new ZkNode(zkHost, zkHost.getName(), "/", true, null, stat.getNumChildren(),
-                    new Date(stat.getCtime()), new Date(stat.getMtime()), stat.getVersion());
-
+            ZkNode rootNode = getRoot(zkHost);
             logger.debug("adding root node: " + rootNode);
-
             roots.add(rootNode);
         }
         return roots;

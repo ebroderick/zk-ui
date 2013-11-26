@@ -12,6 +12,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.FileUtils;
+import zk_ui.zookeeper.ZkHost;
 
 public class ConfigurationManager {
     private static final String CONFIG_XML_FILE_NAME = "config.xml";
@@ -46,6 +47,27 @@ public class ConfigurationManager {
             save();
         } catch (Exception e) {
             throw new ConfigurationException("Could not add ZkServer", e);
+        }
+    }
+
+    public void removeZkServer(ZkHost zkHost) throws ConfigurationException {
+        int index = 0;
+        for (ZkServer zkServer : config.getZkServerList().getZkServer()) {
+            if (zkServer.getHostName().equals(zkHost.getHostAndPort().split(":")[0]) &&
+                zkServer.getPort().equals(zkHost.getHostAndPort().split(":")[1]) &&
+                zkServer.getName().equals(zkHost.getName())) {
+                break;
+            }
+            index++;
+        }
+
+        if (index < config.getZkServerList().getZkServer().size()) {
+            config.getZkServerList().getZkServer().remove(index);
+            try {
+                save();
+            } catch (Exception e) {
+                throw new ConfigurationException("Could not remove ZkServer", e);
+            }
         }
     }
 

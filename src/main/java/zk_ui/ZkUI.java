@@ -30,18 +30,17 @@ public class ZkUI extends UI {
             throw new RuntimeException(e);
         }
 
-        VerticalLayout content = new VerticalLayout();
-        content.setSizeFull();
-        content.addComponent(new ZkUiMenuBar(configurationManager));
-
-        HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-        splitPanel.setSplitPosition(300, Unit.PIXELS);
-
         ZkClient zkClient = getZkClient(configurationManager);
 
         ZkNodeDetailLayout nodeDetailLayout = new ZkNodeDetailLayout(zkClient);
-        ZkTreeLayout zkTreeLayout = new ZkTreeLayout(zkClient, nodeDetailLayout);
+        ZkTreeLayout zkTreeLayout = new ZkTreeLayout(zkClient, nodeDetailLayout, configurationManager);
 
+        VerticalLayout content = new VerticalLayout();
+        content.setSizeFull();
+        content.addComponent(new ZkUiMenuBar(configurationManager, zkTreeLayout, zkClient));
+
+        HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+        splitPanel.setSplitPosition(300, Unit.PIXELS);
         splitPanel.setFirstComponent(zkTreeLayout);
         splitPanel.setSecondComponent(nodeDetailLayout);
 

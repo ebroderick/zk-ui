@@ -12,11 +12,11 @@ import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.LayoutEvents;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
-import com.vaadin.ui.Button;
+import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.DefaultFieldFactory;
 import com.vaadin.ui.Field;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.Table;
@@ -34,8 +34,8 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
     private static final String CONTAINER_PROPERTY_CREATE_TIMESTAMP = "createTimestamp";
     private static final String CONTAINER_PROPERTY_MODIFIED_TIMESTAMP = "lastModifiedTimestamp";
     private static final String CONTAINER_PROPERTY_VERSION = "version";
-    private static final String CONTAINER_PROPERTY_PATH = "path";
     private Table table;
+    private Label pathLabel;
     private ZkClient zkClient;
 
     public ZkNodeDetailLayout(final ZkClient zkClient) {
@@ -51,11 +51,9 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
                 CONTAINER_PROPERTY_VALUE,
                 CONTAINER_PROPERTY_CREATE_TIMESTAMP,
                 CONTAINER_PROPERTY_MODIFIED_TIMESTAMP,
-                CONTAINER_PROPERTY_VERSION,
-                CONTAINER_PROPERTY_PATH});
+                CONTAINER_PROPERTY_VERSION});
 
-        table.setColumnHeaders(new String[] { "Node Name", "Node Value", "Create Time", "Last Modified Time", "Version",
-                "Node Path" });
+        table.setColumnHeaders(new String[] { "Node Name", "Node Value", "Create Time", "Last Modified Time", "Version"});
 
         table.setSizeFull();
         table.setSelectable(true);
@@ -65,12 +63,16 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
         table.setColumnCollapsingAllowed(true);
         table.setColumnWidth(CONTAINER_PROPERTY_VALUE, 400);
         table.setColumnCollapsed(CONTAINER_PROPERTY_VERSION, true);
-        table.setColumnCollapsed(CONTAINER_PROPERTY_PATH, true);
         table.setTableFieldFactory(new ZkNodeDetailFieldFactory());
         table.setEditable(true);
 
         addComponent(table);
         setExpandRatio(table, 1.0f);
+
+        pathLabel = new Label();
+        addComponent(pathLabel);
+        pathLabel.setContentMode(ContentMode.HTML);
+        setComponentAlignment(pathLabel, Alignment.BOTTOM_LEFT);
     }
 
     /**
@@ -85,10 +87,20 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
             ZkNode zkNode = (ZkNode) itemId;
             table.setContainerDataSource(getContainer(zkNode));
         }
+        setPathLabel(((ZkNode) itemId).getFullPath());
     }
 
     public void showChildren(ZkNode zkNode) {
         table.setContainerDataSource(getContainerForChildren(zkNode));
+        setPathLabel(zkNode.getFullPath());
+    }
+
+    private void setPathLabel(String path) {
+        pathLabel.setValue("<span style=\"font-size:10px;\"><b>Path:</b> " + path + "</span>");
+    }
+
+    public void clear() {
+        table.setContainerDataSource(getContainer(new ArrayList<ZkNode>()));
     }
 
     private IndexedContainer getContainer() {
@@ -110,7 +122,6 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
         container.addContainerProperty(CONTAINER_PROPERTY_CREATE_TIMESTAMP, Date.class, null);
         container.addContainerProperty(CONTAINER_PROPERTY_MODIFIED_TIMESTAMP, Date.class, null);
         container.addContainerProperty(CONTAINER_PROPERTY_VERSION, Integer.class, null);
-        container.addContainerProperty(CONTAINER_PROPERTY_PATH, String.class, null);
 
         for (ZkNode zkNode : zkNodes) {
             Item item = container.addItem(zkNode.getFullPath());
@@ -120,7 +131,6 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
             item.getItemProperty(CONTAINER_PROPERTY_CREATE_TIMESTAMP).setValue(zkNode.getCreateTimestamp());
             item.getItemProperty(CONTAINER_PROPERTY_MODIFIED_TIMESTAMP).setValue(zkNode.getModifiedTimestamp());
             item.getItemProperty(CONTAINER_PROPERTY_VERSION).setValue(zkNode.getVersion());
-            item.getItemProperty(CONTAINER_PROPERTY_PATH).setValue(zkNode.getFullPath());
         }
 
         return container;

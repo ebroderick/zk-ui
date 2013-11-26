@@ -11,11 +11,16 @@ import com.vaadin.ui.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zk_ui.config.ConfigurationManager;
+import zk_ui.zookeeper.ZkClient;
+import zk_ui.zookeeper.ZkHost;
+import zk_ui.zookeeper.ZkNode;
 
 public class ZkAddZkServerWindow extends Window {
     private static Logger logger = LoggerFactory.getLogger(ZkAddZkServerWindow.class);
 
-    public ZkAddZkServerWindow(final ConfigurationManager configurationManager) {
+    public ZkAddZkServerWindow(final ConfigurationManager configurationManager,
+            final ZkTreeLayout zkTreeLayout, final ZkClient zkClient) {
+
         setCaption("Add a ZooKeeper Server...");
         setWidth(500, Unit.PIXELS);
         setHeight(350, Unit.PIXELS);
@@ -67,6 +72,13 @@ public class ZkAddZkServerWindow extends Window {
                 try {
                     configurationManager.addZkServer(name, hostName, port);
                     Notification.show("Added '" + name + "'", Notification.Type.TRAY_NOTIFICATION);
+
+                    ZkHost zkHost = new ZkHost(name, hostName + ":" + port);
+                    zkClient.addZkHost(zkHost);
+
+                    ZkNode rootNode = zkClient.getRoot(zkHost);
+                    zkTreeLayout.addRoot(rootNode);
+
                 } catch (ConfigurationManager.ConfigurationException e) {
                     Notification.show("Could not add '" + name + "': " + e.getMessage(), Notification.Type.ERROR_MESSAGE);
                     logger.error(e.getMessage(), e);

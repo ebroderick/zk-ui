@@ -1,10 +1,11 @@
 package zk_ui.zookeeper;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import org.apache.zookeeper.data.Stat;
 
-public class ZkNode {
+public class ZkNode implements Serializable {
     private ZkHost zkHost;
     private String nodeName;
     private String fullPath;
