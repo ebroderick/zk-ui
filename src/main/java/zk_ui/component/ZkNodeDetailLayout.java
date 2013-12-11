@@ -151,40 +151,38 @@ public class ZkNodeDetailLayout extends VerticalLayout implements ItemClickEvent
 
     private class ZkNodeValueEditLayout extends VerticalLayout {
         private ZkNodeValueEditLayout(final ZkNode zkNode, final Container container) {
-            if (!zkNode.hasChildren()) {
-                final TextField textField = new TextField();
-                textField.setSizeFull();
-                textField.setValue(zkNode.getValue());
-                textField.setReadOnly(true);
+            final TextField textField = new TextField();
+            textField.setSizeFull();
+            textField.setValue(zkNode.getValue());
+            textField.setReadOnly(true);
 
-                textField.addShortcutListener(new ShortcutListener("EnterKey", ShortcutAction.KeyCode.ENTER, null) {
-                    @Override
-                    public void handleAction(Object sender, Object target) {
-                        String value = ((TextField) target).getValue();
-                        zkClient.updateValue(zkNode, value);
-                        zkNode.refresh(zkClient);
-                        ((TextField) target).setReadOnly(true);
+            textField.addShortcutListener(new ShortcutListener("EnterKey", ShortcutAction.KeyCode.ENTER, null) {
+                @Override
+                public void handleAction(Object sender, Object target) {
+                    String value = ((TextField) target).getValue();
+                    zkClient.updateValue(zkNode, value);
+                    zkNode.refresh(zkClient);
+                    ((TextField) target).setReadOnly(true);
 
-                        container.getItem(zkNode.getFullPath())
-                                .getItemProperty(CONTAINER_PROPERTY_MODIFIED_TIMESTAMP)
-                                .setValue(zkNode.getModifiedTimestamp());
+                    container.getItem(zkNode.getFullPath())
+                            .getItemProperty(CONTAINER_PROPERTY_MODIFIED_TIMESTAMP)
+                            .setValue(zkNode.getModifiedTimestamp());
 
-                        container.getItem(zkNode.getFullPath())
-                                .getItemProperty(CONTAINER_PROPERTY_VERSION)
-                                .setValue(zkNode.getVersion());
+                    container.getItem(zkNode.getFullPath())
+                            .getItemProperty(CONTAINER_PROPERTY_VERSION)
+                            .setValue(zkNode.getVersion());
+                }
+            });
+
+            addComponent(textField);
+            addLayoutClickListener(new LayoutEvents.LayoutClickListener() {
+                @Override
+                public void layoutClick(LayoutEvents.LayoutClickEvent layoutClickEvent) {
+                    if (layoutClickEvent.isDoubleClick() && layoutClickEvent.getChildComponent() == textField) {
+                        textField.setReadOnly(!textField.isReadOnly());
                     }
-                });
-
-                addComponent(textField);
-                addLayoutClickListener(new LayoutEvents.LayoutClickListener() {
-                    @Override
-                    public void layoutClick(LayoutEvents.LayoutClickEvent layoutClickEvent) {
-                        if (layoutClickEvent.isDoubleClick() && layoutClickEvent.getChildComponent() == textField) {
-                            textField.setReadOnly(!textField.isReadOnly());
-                        }
-                    }
-                });
-            }
+                }
+            });
         }
     }
 
